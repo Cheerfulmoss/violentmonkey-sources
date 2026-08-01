@@ -1,0 +1,78 @@
+.vm-panel {
+    margin-top: 32px;
+}
+
+
+.vm-section {
+    margin-bottom: 32px;
+    padding: 20px;
+
+    border-radius: 12px;
+    border: 1px solid var(--border);
+
+    background: var(--background-secondary);
+}
+
+
+.vm-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+
+.vm-search-controls {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+
+.vm-input {
+    flex: 1;
+    min-width: 250px;
+}
+
+
+.vm-json-container {
+    margin-top: 16px;
+    padding: 16px;
+
+    border-radius: 10px;
+
+    background:
+        var(--background-primary);
+
+    border:
+        1px solid var(--border);
+
+    overflow-x: auto;
+}
+
+
+.vm-json {
+    margin: 0;
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    color: var(--text-primary);
+}
