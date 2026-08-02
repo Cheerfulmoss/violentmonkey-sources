@@ -389,6 +389,9 @@
       courses: null
     };
 
+    static findToken() {
+        return findToken();
+    }
 
     static async request(
       path,
