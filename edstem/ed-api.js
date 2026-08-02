@@ -378,6 +378,347 @@
 
   }
 
+  /* ============================================================ *
+   * NEXTGEN API CLIENT
+   * ============================================================ */
+
+  class EdAPI_NEXTGEN {
+
+    static cache = {
+      user: null,
+      courses: null
+    };
+
+
+    static async request(
+      path,
+      {
+        method = "GET",
+        body = null,
+        headers = {}
+      } = {}
+    ) {
+
+      const token =
+        findToken();
+
+
+      const response =
+        await fetch(
+          `https://${location.host}${path}`,
+          {
+            method,
+
+            credentials: "include",
+
+            headers: {
+              "Content-Type": "application/json",
+
+              ...(token
+                ? {
+                    "X-Token": token
+                  }
+                : {}),
+
+              ...headers
+            },
+
+            body:
+              body
+                ? JSON.stringify(body)
+                : null
+          }
+        );
+
+
+      let data = null;
+
+      try {
+        data =
+          await response.json();
+
+      } catch {
+        /* empty body */
+      }
+
+
+      if (!response.ok) {
+
+        const error =
+          new Error(
+            `${method} ${path} failed (${response.status})`
+          );
+
+
+        error.status =
+          response.status;
+
+
+        error.data =
+          data;
+
+
+        throw error;
+      }
+
+
+      return data;
+    }
+
+
+
+    static async user({
+      refresh = false
+    } = {}) {
+
+      if (
+        this.cache.user &&
+        !refresh
+      ) {
+        return this.cache.user;
+      }
+
+
+      const data =
+        await this.request(
+          "/api/user"
+        );
+
+
+      this.cache.user =
+        data.user;
+
+
+      return this.cache.user;
+    }
+
+
+
+    static async courses({
+      refresh = false
+    } = {}) {
+
+      if (
+        this.cache.courses &&
+        !refresh
+      ) {
+        return this.cache.courses;
+      }
+
+
+      const data =
+        await this.request(
+          "/api/user"
+        );
+
+
+      this.cache.courses =
+        data.courses.map(
+          x => x.course
+        );
+
+
+      return this.cache.courses;
+    }
+
+
+
+    static async updateUser(
+      id,
+      patch
+    ) {
+
+      const data =
+        await this.request(
+          `/api/users/${id}`,
+          {
+            method: "PATCH",
+
+            body: {
+              user: patch
+            }
+          }
+        );
+
+
+      this.cache.user =
+        null;
+
+
+      return data;
+    }
+
+
+
+    static async lookupUser(
+      id,
+      {
+        course = null
+      } = {}
+    ) {
+
+      const courses =
+        course
+          ? [course]
+          : await this.courses();
+
+
+      for (
+        const current of courses
+      ) {
+
+        const user =
+          await this.lookupUserInCourse(
+            current,
+            id
+          );
+
+
+        if (user) {
+          return user;
+        }
+      }
+
+
+      return null;
+    }
+
+
+
+    static async lookupUserInCourse(
+      course,
+      id
+    ) {
+
+      for (
+        const endpoint of [
+          `/api/courses/${course.id}/users/${id}?emails=true`,
+          `/api/courses/${course.id}/users/${id}`
+        ]
+      ) {
+
+        try {
+
+          const data =
+            await this.request(
+              endpoint
+            );
+
+
+          if (
+            data.user
+          ) {
+
+            return {
+              course,
+
+              ...data.user
+            };
+          }
+
+        } catch(error) {
+
+          if (
+            error.status === 403
+          ) {
+            continue;
+          }
+
+          if (
+            error.status === 404
+          ) {
+            continue;
+          }
+
+
+          throw error;
+        }
+      }
+
+
+      return null;
+    }
+
+
+
+    static async thread(
+      id
+    ) {
+
+      const data =
+        await this.request(
+          `/api/threads/${id}`
+        );
+
+
+      return {
+        ...data.thread,
+
+        users:
+          data.users
+      };
+    }
+
+
+
+    static async createComment(
+      threadId,
+      content
+    ) {
+
+      return this.request(
+        `/api/threads/${threadId}/comments`,
+        {
+          method: "POST",
+
+          body: {
+            comment: {
+              type: "comment",
+              content,
+              is_private: false,
+              is_anonymous: false
+            }
+          }
+        }
+      );
+    }
+
+
+
+    static async editComment(
+      id,
+      content
+    ) {
+
+      return this.request(
+        `/api/comments/${id}`,
+        {
+          method: "PUT",
+
+          body: {
+            comment: {
+              content,
+              is_private: false,
+              is_anonymous: false
+            }
+          }
+        }
+      );
+    }
+
+
+
+    static clearCache() {
+
+      this.cache.user =
+        null;
+
+
+      this.cache.courses =
+        null;
+    }
+
+  }
 
   /* ============================================================ *
    * URL / DOM HELPERS
@@ -649,14 +990,16 @@
    * EXPORT
    * ============================================================ */
 
-  global.EdStemAPI = {
-    EdAPI,
-    getCurrentThread,
-    flattenComments,
-    extractPlainText,
-    xmlDocument,
-    installThreadListener,
-  };
+   global.EdStemAPI = {
+     EdAPI,
+     EdAPI_NEXTGEN,
+
+     getCurrentThread,
+     flattenComments,
+     extractPlainText,
+     xmlDocument,
+     installThreadListener,
+   };
 
 
 })(window);
