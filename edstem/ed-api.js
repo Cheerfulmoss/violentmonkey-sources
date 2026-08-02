@@ -733,7 +733,6 @@
    * ============================================================ */
 
    global.EdStemAPI = {
-     EdAPI,
      EdAPI_NEXTGEN,
 
      getCurrentThread,
