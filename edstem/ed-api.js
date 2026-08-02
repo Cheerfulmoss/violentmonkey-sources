@@ -642,7 +642,15 @@
       return null;
     }
 
+    static async courseUsers(courseId) {
 
+        const data =
+            await this.request(
+                `/api/courses/${courseId}/admin`
+            );
+
+        return data.users || [];
+    }
 
     static async thread(
       id
